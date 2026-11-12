@@ -1,53 +1,38 @@
-from threading import Thread
-from flask import current_app, render_template
-from flask_mail import Message
-from . import mail
-
 import requests
-from datetime import datetime
-
-def send_async_email(app, msg):
-    with app.app_context():
-        mail.send(msg)
+from flask import current_app, render_template
 
 
 def send_email(to, subject, template, **kwargs):
-    app = current_app._get_current_object()
-    msg = Message(app.config['FLASKY_MAIL_SUBJECT_PREFIX'] + ' ' + subject,
-                  sender=app.config['FLASKY_MAIL_SENDER'], recipients=[to])
-    msg.html = render_template(template + '.html', **kwargs)
-    thr = Thread(target=send_async_email, args=[app, msg])
-    thr.start()
-    return thr
+    """Envia um e-mail pela API HTTP do Mailgun.
 
-
-def send_simple_message(to, subject, newUser):
+    O corpo vem dos templates '<template>.txt' e '<template>.html'.
+    Retorna True se o Mailgun aceitou o envio.
+    """
     app = current_app._get_current_object()
+    assunto = app.config['FLASKY_MAIL_SUBJECT_PREFIX'] + ' ' + subject
 
     try:
         resposta = requests.post(
-            app.config['API_URL'],
-            auth=('api', app.config['API_KEY']),
+            app.config['MAILGUN_API_URL'],
+            auth=('api', app.config['MAILGUN_API_KEY']),
             data={
-                'from': app.config['API_FROM'],
+                'from': app.config['MAILGUN_FROM'],
                 'to': to,
-                'subject': (
-                    app.config['FLASKY_MAIL_SUBJECT_PREFIX']
-                    + ' ' + subject
-                ),
-                'text': 'Novo usuário cadastrado: ' + newUser
+                'subject': assunto,
+                'text': render_template(template + '.txt', **kwargs),
+                'html': render_template(template + '.html', **kwargs),
             },
-            timeout=15
+            timeout=15,
         )
-
-        print(
-            'Resposta do Mailgun:',
-            resposta.status_code,
-            flush=True
-        )
-
-        return resposta
-
     except requests.RequestException as erro:
-        print('Erro ao enviar e-mail:', erro, flush=True)
-        return None
+        app.logger.error('[Mailgun] erro de conexão ao enviar para %s: %s',
+                         to, erro)
+        return False
+
+    if resposta.status_code != 200:
+        app.logger.error('[Mailgun] falha (%s) para %s: %s',
+                         resposta.status_code, to, resposta.text)
+        return False
+
+    app.logger.info('[Mailgun] enviado para %s', to)
+    return True

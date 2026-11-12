@@ -6,3 +6,9 @@ __pycache__/
 
 # Ignore virtual environment directories
 venv/
+
+# Ignora o env
+.env
+
+# Banco de desenvolvimento
+data-dev.sqlite
