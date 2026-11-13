@@ -3,7 +3,45 @@
 {% block title %}Flasky{% endblock %}
 
 {% block page_content %}
+
 <div class="page-header">
-    <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!</h1>
+    <h1>
+        Hello,
+        {% if current_user.is_authenticated %}
+            {{ current_user.username }}
+        {% else %}
+            Stranger
+        {% endif %}!
+    </h1>
 </div>
+{% if current_user.is_authenticated %}
+
+    <h2>Relação de usuários cadastrados</h2>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Nome do usuário</th>
+                <th>E-mail</th>
+                <th>Confirmado?</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.username }}</td>
+                <td>{{ usuario.email }}</td>
+                <td>{{ usuario.confirmed }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">Nenhum usuário cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endif %}
+
 {% endblock %}
