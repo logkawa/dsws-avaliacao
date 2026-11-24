@@ -1,6 +1,6 @@
+
 from flask import Flask
 from flask_bootstrap import Bootstrap
-from flask_login import LoginManager
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from config import config
@@ -8,9 +8,6 @@ from config import config
 bootstrap = Bootstrap()
 moment = Moment()
 db = SQLAlchemy()
-
-login_manager = LoginManager()
-login_manager.login_view = 'auth.login'
 
 
 def create_app(config_name):
@@ -21,12 +18,26 @@ def create_app(config_name):
     bootstrap.init_app(app)
     moment.init_app(app)
     db.init_app(app)
-    login_manager.init_app(app)
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    from .auth import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    with app.app_context():
+        from .models import Disciplina
+        db.create_all()
+
+        disciplinas = [
+            ('DSWA5', 'Desenvolvimento de Sistemas Web'),
+            ('TCOA5', 'Técnicas de Comunicação'),
+            ('GPSA5', 'Gestão de Projetos'),
+            ('IHCA5', 'Inglês')
+        ]
+
+        for codigo, nome in disciplinas:
+            existente = Disciplina.query.filter_by(codigo=codigo).first()
+            if existente is None:
+                db.session.add(Disciplina(codigo=codigo, nome=nome))
+
+        db.session.commit()
 
     return app

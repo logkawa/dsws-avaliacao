@@ -1,0 +1,56 @@
+
+{% extends "base.html" %}
+
+{% block page_content %}
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="form-group">
+        {{ form.nome.label }}
+        {{ form.nome(class="form-control") }}
+
+        {% for erro in form.nome.errors %}
+            <span class="text-danger">{{ erro }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.disciplina.label }}
+        {{ form.disciplina(class="form-control") }}
+
+        {% for erro in form.disciplina.errors %}
+            <span class="text-danger">{{ erro }}</span>
+        {% endfor %}
+    </div>
+
+    {{ form.submit(class="btn btn-default") }}
+</form>
+
+<h2>Relação de alunos cadastrados</h2>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Aluno</th>
+            <th>Disciplina</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for aluno in alunos %}
+        <tr>
+            <td>{{ aluno.nome }}</td>
+            <td>{{ aluno.disciplina.codigo }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="2">Nenhum aluno cadastrado.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block data_hora %}{% endblock %}
